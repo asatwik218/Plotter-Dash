@@ -41,6 +41,8 @@ gps_data = {
 }
 gpsDF = pd.DataFrame(gps_data)
 
+commStatus = "Connected" if not isTesting else "Disconnected"
+
 #update data with random values
 def update_random():
     global df, data
@@ -54,11 +56,11 @@ def update_random():
 #update data with serial values
 # assuming data packet is in form : vel,alt,press,lat,lon 
 def update_serial():
-    global df, data, gps_data, gpsDF
+    global df, data, gps_data, gpsDF,commStatus
     try:
         while (ad.inWaiting()==0):
             pass
-
+        commStatus = "Connected"
         dataPacket=ad.readline()
         dataPacket=str(dataPacket,'utf-8')
         splitPacket=dataPacket.split(",")
@@ -81,29 +83,39 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 px.set_mapbox_access_token("pk.eyJ1IjoiYXNhdHdpazIxOCIsImEiOiJjbGh2bm1lb28wOXB4M2dwN291anoxNmwwIn0.IjyWgNVRj-rLIgdisFBAlg")
 
 #layout 
-app.layout = dbc.Container([
+app.layout =html.Div([
+    dbc.Row([
 
-    dbc.Row([
-        dbc.Col(html.H4("TMIT Plotter"),className='text-center')
-    ]),
-    dbc.Row([
-        dbc.Col( dcc.Graph(id='velocity-graph'), className='h-50', width=5),
-        dbc.Col( dcc.Graph(id='altitude-graph'), className='m-1 p-1', width=5),
-    ]),
-    dbc.Row([
-        dbc.Col( dcc.Graph(id='pressure-graph'),width=5),
-        dbc.Col( dcc.Graph(id='map-graph'),width=5),
-    ]),
-    dbc.Row([
-        dbc.Col(
-        dcc.Interval(
-            id='interval-component',
-            interval=1*1000, # in milliseconds
-            n_intervals=0
-        )
-        )
+        dbc.Col(html.Div([
+            html.Div(id="sidePanel",style={"margin":"20px 20px","height":"100%"})
+        ],style={"margin":"20px 20px","height":"100%"}),width={"size":3}),
+
+        dbc.Col([
+            dbc.Row([
+                dbc.Col(html.H4("TMIT Plotter"),className='text-center')
+            ]),
+            dbc.Row([
+                dbc.Col( dcc.Graph(id='velocity-graph'),width=6),
+                dbc.Col( dcc.Graph(id='altitude-graph'),width=6),
+            ]),
+            dbc.Row([
+                dbc.Col( dcc.Graph(id='pressure-graph'),width=6),
+                dbc.Col( dcc.Graph(id='map-graph'),width=6),
+            ]),
+            dbc.Row([
+                dbc.Col(
+                    dcc.Interval(
+                        id='interval-component',
+                        interval=1*1000, # in milliseconds
+                        n_intervals=0
+                    )
+                )
+            ])
+        ],width={"size":8})
     ])
-],fluid=False)
+
+   
+])
 
 # velocity graph
 @app.callback(Output('velocity-graph','figure'),Input('interval-component','n_intervals'))
@@ -146,6 +158,26 @@ def update_map_graph(n):
     fig.update_layout(mapbox_style="open-street-map")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     return fig
+
+# side panel
+@app.callback(Output('sidePanel','children'),Input('interval-component','n_intervals'))
+def update_velocity_graph(n):
+    style = {
+        'padding': '10px',
+        'margin': '10px',
+        'box-shadow': '2px 2px 4px rgb(67, 63, 77)'
+
+
+
+    }
+    return([
+
+        html.H6("Comm Status : "+commStatus),
+        html.H6("Velocity : "+str(df["velocity"].tail(1).values[0]),style=style),
+        html.H6("Altitude : "+str(df["altitude"].tail(1).values[0]) , style=style),
+        html.H6("Pressure : "+str(df["pressure"].tail(1).values[0]), style = style),
+    ])
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
