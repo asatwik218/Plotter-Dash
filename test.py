@@ -49,8 +49,6 @@ commStatus = "Connected" if not isTesting else "Disconnected"
 
 filename = "flightData.csv"
 
-logo = "./logo.png"
-
 # update csv file 
 def update_csv():
     global df, data, gps_data, gpsDF,commStatus
@@ -169,7 +167,7 @@ def update_altitude_graph(n):
 def update_pressure_graph(n):
     global df
     fig = px.line(df[["timestamp","pressure"]].tail(20), x="timestamp", y="pressure",markers=True,height=350)  
-    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s) ",yaxis_title="pressure (Pa)") 
+    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s) ",yaxis_title="pressure (KPa)") 
     return fig
 
 # map
@@ -194,7 +192,7 @@ def update_velocity_graph(n):
         html.H6("Comm Status : "+commStatus),
         html.H6("Velocity : "+str(df["velocity"].tail(1).values[0])+" m/s",style=style),
         html.H6("Altitude : "+str(df["altitude"].tail(1).values[0])+" m" , style=style),
-        html.H6("Pressure : "+str(df["pressure"].tail(1).values[0])+" Pa", style = style),
+        html.H6("Pressure : "+str(df["pressure"].tail(1).values[0])+" KPa", style = style),
     ])
 
 
