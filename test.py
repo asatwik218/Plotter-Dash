@@ -1,6 +1,8 @@
 from datetime import datetime
 from time import *
 import random
+# pip install numpy
+import numpy as np
 # pip install dash
 from dash import Dash ,dcc, html
 from dash.dependencies import Input, Output
@@ -12,6 +14,8 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 # pip install pyserial
 import serial
+
+import csv
 
 
 # set to true if testing without serial
@@ -42,6 +46,21 @@ gps_data = {
 gpsDF = pd.DataFrame(gps_data)
 
 commStatus = "Connected" if not isTesting else "Disconnected"
+
+filename = "flightData.csv"
+
+# update csv file 
+def update_csv():
+    global df, data, gps_data, gpsDF,commStatus
+    toWrie = (np.hstack((df.values[-1],np.array([gpsDF.values[0][0],gpsDF.values[0][1]]))))
+    
+    # writing to csv file 
+    with open(filename, 'a') as csvfile: 
+        # creating a csv writer object 
+        csvwriter = csv.writer(csvfile) 
+        # writing the data rows 
+        csvwriter.writerow(toWrie)
+
 
 #update data with random values
 def update_random():
@@ -125,8 +144,10 @@ def update_velocity_graph(n):
     # updating dataframe
     if(isTesting):
         update_random()
+        update_csv()
     else:
         update_serial()
+        update_csv()
 
     fig = px.line(df[["timestamp","velocity"]].tail(20), x="timestamp", y="velocity",markers=True,height=350) 
     fig.update_layout(template="plotly_dark") 
@@ -166,12 +187,8 @@ def update_velocity_graph(n):
         'padding': '10px',
         'margin': '10px',
         'box-shadow': '2px 2px 4px rgb(67, 63, 77)'
-
-
-
     }
     return([
-
         html.H6("Comm Status : "+commStatus),
         html.H6("Velocity : "+str(df["velocity"].tail(1).values[0]),style=style),
         html.H6("Altitude : "+str(df["altitude"].tail(1).values[0]) , style=style),
