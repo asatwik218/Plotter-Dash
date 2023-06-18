@@ -49,6 +49,8 @@ commStatus = "Connected" if not isTesting else "Disconnected"
 
 filename = "flightData.csv"
 
+logo = "./logo.png"
+
 # update csv file 
 def update_csv():
     global df, data, gps_data, gpsDF,commStatus
@@ -111,7 +113,7 @@ app.layout =html.Div([
 
         dbc.Col([
             dbc.Row([
-                dbc.Col(html.H4("TMIT Plotter"),className='text-center')
+                dbc.Col(html.H4("ThrustMIT"),className='text-center')
             ]),
             dbc.Row([
                 dbc.Col( dcc.Graph(id='velocity-graph'),width=6),
@@ -150,7 +152,7 @@ def update_velocity_graph(n):
         update_csv()
 
     fig = px.line(df[["timestamp","velocity"]].tail(20), x="timestamp", y="velocity",markers=True,height=350) 
-    fig.update_layout(template="plotly_dark") 
+    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s)",yaxis_title="velocity (m/s)") 
     return fig
 
 # altitude graph
@@ -158,7 +160,7 @@ def update_velocity_graph(n):
 def update_altitude_graph(n):
     global df
     fig = px.line(df[["timestamp","altitude"]].tail(20), x="timestamp", y="altitude",markers=True,height=350)
-    fig.update_layout(template="plotly_dark") 
+    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s) ",yaxis_title="altitude (m)") 
 
     return fig
 
@@ -167,7 +169,7 @@ def update_altitude_graph(n):
 def update_pressure_graph(n):
     global df
     fig = px.line(df[["timestamp","pressure"]].tail(20), x="timestamp", y="pressure",markers=True,height=350)  
-    fig.update_layout(template="plotly_dark") 
+    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s) ",yaxis_title="pressure (Pa)") 
     return fig
 
 # map
@@ -190,9 +192,9 @@ def update_velocity_graph(n):
     }
     return([
         html.H6("Comm Status : "+commStatus),
-        html.H6("Velocity : "+str(df["velocity"].tail(1).values[0]),style=style),
-        html.H6("Altitude : "+str(df["altitude"].tail(1).values[0]) , style=style),
-        html.H6("Pressure : "+str(df["pressure"].tail(1).values[0]), style = style),
+        html.H6("Velocity : "+str(df["velocity"].tail(1).values[0])+" m/s",style=style),
+        html.H6("Altitude : "+str(df["altitude"].tail(1).values[0])+" m" , style=style),
+        html.H6("Pressure : "+str(df["pressure"].tail(1).values[0])+" Pa", style = style),
     ])
 
 
