@@ -1,6 +1,8 @@
 from datetime import datetime
 from time import *
 import random
+# pip install numpy
+import numpy as np
 # pip install dash
 from dash import Dash ,dcc, html
 from dash.dependencies import Input, Output
@@ -12,6 +14,8 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 # pip install pyserial
 import serial
+
+import csv
 
 
 # set to true if testing without serial
@@ -42,6 +46,21 @@ gps_data = {
 gpsDF = pd.DataFrame(gps_data)
 
 commStatus = "Connected" if not isTesting else "Disconnected"
+
+filename = "flightData.csv"
+
+# update csv file 
+def update_csv():
+    global df, data, gps_data, gpsDF,commStatus
+    toWrie = (np.hstack((df.values[-1],np.array([gpsDF.values[0][0],gpsDF.values[0][1]]))))
+    
+    # writing to csv file 
+    with open(filename, 'a') as csvfile: 
+        # creating a csv writer object 
+        csvwriter = csv.writer(csvfile) 
+        # writing the data rows 
+        csvwriter.writerow(toWrie)
+
 
 #update data with random values
 def update_random():
@@ -92,7 +111,7 @@ app.layout =html.Div([
 
         dbc.Col([
             dbc.Row([
-                dbc.Col(html.H4("TMIT Plotter"),className='text-center')
+                dbc.Col(html.H4("ThrustMIT"),className='text-center')
             ]),
             dbc.Row([
                 dbc.Col( dcc.Graph(id='velocity-graph'),width=6),
@@ -125,11 +144,13 @@ def update_velocity_graph(n):
     # updating dataframe
     if(isTesting):
         update_random()
+        update_csv()
     else:
         update_serial()
+        update_csv()
 
     fig = px.line(df[["timestamp","velocity"]].tail(20), x="timestamp", y="velocity",markers=True,height=350) 
-    fig.update_layout(template="plotly_dark") 
+    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s)",yaxis_title="velocity (m/s)") 
     return fig
 
 # altitude graph
@@ -137,7 +158,7 @@ def update_velocity_graph(n):
 def update_altitude_graph(n):
     global df
     fig = px.line(df[["timestamp","altitude"]].tail(20), x="timestamp", y="altitude",markers=True,height=350)
-    fig.update_layout(template="plotly_dark") 
+    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s) ",yaxis_title="altitude (m)") 
 
     return fig
 
@@ -146,7 +167,7 @@ def update_altitude_graph(n):
 def update_pressure_graph(n):
     global df
     fig = px.line(df[["timestamp","pressure"]].tail(20), x="timestamp", y="pressure",markers=True,height=350)  
-    fig.update_layout(template="plotly_dark") 
+    fig.update_layout(template="plotly_dark",xaxis_title="time (m:s) ",yaxis_title="pressure (KPa)") 
     return fig
 
 # map
@@ -166,16 +187,12 @@ def update_velocity_graph(n):
         'padding': '10px',
         'margin': '10px',
         'box-shadow': '2px 2px 4px rgb(67, 63, 77)'
-
-
-
     }
     return([
-
         html.H6("Comm Status : "+commStatus),
-        html.H6("Velocity : "+str(df["velocity"].tail(1).values[0]),style=style),
-        html.H6("Altitude : "+str(df["altitude"].tail(1).values[0]) , style=style),
-        html.H6("Pressure : "+str(df["pressure"].tail(1).values[0]), style = style),
+        html.H6("Velocity : "+str(df["velocity"].tail(1).values[0])+" m/s",style=style),
+        html.H6("Altitude : "+str(df["altitude"].tail(1).values[0])+" m" , style=style),
+        html.H6("Pressure : "+str(df["pressure"].tail(1).values[0])+" KPa", style = style),
     ])
 
 
